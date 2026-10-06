@@ -1,0 +1,4 @@
+# Captured face images and the trained model are personal data
+dataset/
+trainer/
+__pycache__/
