@@ -1,95 +1,50 @@
-# Face-Detection-and-Recognition
+# Face Detection and Recognition
 
-UDEMY: https://www.udemy.com/share/103qXC3@LXZSWJ9l6Cp65PG61pnM015LCuOHaE4Y51xftePZDVsaSgGLiZlsSbMk6L49gu3Mvw==/
+Real-time face detection and recognition from a webcam using Python and OpenCV. Faces are detected with a Haar cascade and recognised with an LBPH (Local Binary Patterns Histograms) model trained on your own captured images.
 
-This project implements face detection and recognition using Python and OpenCV.
+Built as a learning project while following an OpenCV course.
 
-## Features
+## How it works
 
-- **Face Detection**: Identifies human faces in images or video streams using Haar cascades.
-- **Face Recognition**: Recognizes and labels detected faces based on trained data.
+| Step | Script | What it does |
+|---|---|---|
+| 1. Test camera | `camtestrunscipt.py` | Checks that the webcam can be opened. |
+| 2. Capture faces | `Face_DF.py` | Asks for a numeric user id, then saves 30 grayscale face crops to `dataset/`. |
+| 3. Train | `training.py` | Trains the LBPH recogniser on `dataset/` and saves it to `trainer/trainer.yml`. |
+| 4. Recognise | `Face_Recg.py` | Runs live recognition and labels each face with a name and confidence. |
 
 ## Requirements
 
-- Python 3.x
-- OpenCV
-- NumPy
+- Python 3
+- A webcam
 
-## Installation
+```bash
+pip install opencv-contrib-python numpy pillow
+```
 
-1. **Clone the repository**:
-
-   ```bash
-   git clone https://github.com/bhuvannv13/Face-Detection-and-Recognition.git
-   ```
-
-2. **Navigate to the project directory**:
-
-   ```bash
-   cd Face-Detection-and-Recognition
-   ```
-
-3. **Install the required packages**:
-
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-   *Note*: Ensure that OpenCV is installed. If not, install it using:
-
-   ```bash
-   pip install opencv-python
-   ```
+`opencv-contrib-python` is required (not plain `opencv-python`) because the LBPH recogniser lives in the `cv2.face` module.
 
 ## Usage
 
-1. **Prepare Training Data**:
+```bash
+git clone https://github.com/bhuvannv13/Face-Detection-and-Recognition.git
+cd Face-Detection-and-Recognition
+mkdir dataset trainer
 
-   - Create a directory named `training-images`.
-   - Within `training-images`, create subdirectories for each person, named after the individual.
-   - Add images of the person to the respective subdirectory.
+python camtestrunscipt.py   # optional camera check
+python Face_DF.py           # capture faces; repeat with a new id for each person
+python training.py          # train the recogniser
+python Face_Recg.py         # live recognition, press ESC to quit
+```
 
-   For example:
+To show names instead of ids, edit the `names` list in `Face_Recg.py` so that the position of each name matches the user id you entered during capture.
 
-   ```
-   training-images/
-   ├── Person_A/
-   │   ├── image1.jpg
-   │   ├── image2.jpg
-   │   └── ...
-   └── Person_B/
-       ├── image1.jpg
-       ├── image2.jpg
-       └── ...
-   ```
+## Limitations
 
-2. **Train the Model**:
+- Haar cascades work best on frontal, well-lit faces.
+- LBPH is a classical method and is far less accurate than modern deep learning face recognition.
+- Captured images and the trained model contain personal biometric data, so keep `dataset/` and `trainer/` out of version control.
 
-   Run the training script to process the images and train the recognition model:
+## Acknowledgements
 
-   ```bash
-   python training.py
-   ```
-
-   This will generate the necessary model files for recognition.
-
-3. **Run Face Detection and Recognition**:
-
-   To start the face detection and recognition on a video stream (e.g., webcam), execute:
-
-   ```bash
-   python camtestrunscipt.py
-   ```
-
-   The script will access the webcam, detect faces, and recognize them based on the trained model.
-
-## Acknowledgments
-
-- This project utilizes OpenCV's Haar cascades for face detection.
-- Inspired by various open-source face recognition projects and tutorials.
-
-## License
-
-This project is licensed under the MIT License.
-
-For more details, visit the [GitHub repository](https://github.com/bhuvannv13/Face-Detection-and-Recognition). 
+Uses OpenCV's `haarcascade_frontalface_default.xml`.
