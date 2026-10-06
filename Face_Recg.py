@@ -1,65 +1,90 @@
-import cv2
-import numpy as np
+"""Recognise faces from the webcam using the trained LBPH model."""
 import os
+import sys
 
-recognizer = cv2.face.LBPHFaceRecognizer_create()
-recognizer.read('trainer/trainer.yml')
-cascadePath = "haarcascade_frontalface_default.xml"
-faceCascade = cv2.CascadeClassifier(cascadePath);
+import cv2
 
-font = cv2.FONT_HERSHEY_TRIPLEX
+TRAINER_PATH = os.path.join("trainer", "trainer.yml")
+CASCADE_PATH = "haarcascade_frontalface_default.xml"
 
-# iniciate id counter
-id = 0
+# Position in this list = user id entered in Face_DF.py.
+# Example: names = ["None", "Alice", "Bob"] labels id 1 as Alice and id 2 as Bob.
+names = ["None", "User 1", "User 2", "User 3", "User 4", "User 5"]
 
-names = [0, 1, 2, 3, 'Z', 'W']
 
-# Initialize and start realtime video capture
-cam = cv2.VideoCapture(0)
-cam.set(3, 640)  # set video widht
-cam.set(4, 480)  # set video height
+def label_for(user_id):
+    """Return the display name for a user id, falling back to the id itself."""
+    if 0 <= user_id < len(names):
+        return names[user_id]
+    return f"id {user_id}"
 
-# Define min window size to be recognized as a face
-minW = 0.1 * cam.get(3)
-minH = 0.1 * cam.get(4)
 
-while True:
+def main():
+    if not hasattr(cv2, "face"):
+        sys.exit("Error: cv2.face is missing. Install it with: pip install opencv-contrib-python")
+    if not os.path.exists(TRAINER_PATH):
+        sys.exit(f"Error: {TRAINER_PATH} not found. Run training.py first.")
 
-    ret, img = cam.read()
+    recognizer = cv2.face.LBPHFaceRecognizer_create()
+    recognizer.read(TRAINER_PATH)
+    face_cascade = cv2.CascadeClassifier(CASCADE_PATH)
+    if face_cascade.empty():
+        sys.exit(f"Error: could not load {CASCADE_PATH}")
 
-    gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+    font = cv2.FONT_HERSHEY_TRIPLEX
 
-    faces = faceCascade.detectMultiScale(
-        gray,
-        scaleFactor=1.2,
-        minNeighbors=5,
-        minSize=(int(minW), int(minH)),
-    )
+    # Initialize and start realtime video capture
+    cam = cv2.VideoCapture(0)
+    if not cam.isOpened():
+        sys.exit("Error: could not open the camera.")
+    cam.set(cv2.CAP_PROP_FRAME_WIDTH, 640)
+    cam.set(cv2.CAP_PROP_FRAME_HEIGHT, 480)
 
-    for (x, y, w, h) in faces:
+    # Define min window size to be recognized as a face
+    min_w = int(0.1 * cam.get(cv2.CAP_PROP_FRAME_WIDTH))
+    min_h = int(0.1 * cam.get(cv2.CAP_PROP_FRAME_HEIGHT))
 
-        cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+    try:
+        while True:
+            ret, img = cam.read()
+            if not ret:
+                print("Error: Failed to capture image.")
+                break
 
-        id, confidence = recognizer.predict(gray[y:y + h, x:x + w])
+            gray = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
+            faces = face_cascade.detectMultiScale(
+                gray,
+                scaleFactor=1.2,
+                minNeighbors=5,
+                minSize=(min_w, min_h),
+            )
 
-        # Check if confidence is less them 100 ==> "0" is perfect match
-        if (confidence < 100):
-            id = names[id]
-            confidence = "  {0}%".format(round(100 - confidence))
-        else:
-            id = "unknown"
-            confidence = "  {0}%".format(round(100 - confidence))
+            for (x, y, w, h) in faces:
+                cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
 
-        cv2.putText(img, str(id), (x + 5, y - 5), font, 1, (255, 255, 255), 2)
-        cv2.putText(img, str(confidence), (x + 5, y + h - 5), font, 1, (255, 255, 0), 1)
+                user_id, distance = recognizer.predict(gray[y:y + h, x:x + w])
 
-    cv2.imshow('camera', img)
+                # LBPH returns a distance: 0 is a perfect match, lower is better
+                if distance < 100:
+                    label = label_for(user_id)
+                    confidence = "  {0}%".format(round(100 - distance))
+                else:
+                    label = "unknown"
+                    confidence = ""
 
-    k = cv2.waitKey(10) & 0xff
-    if k == 27:
-        break
+                cv2.putText(img, str(label), (x + 5, y - 5), font, 1, (255, 255, 255), 2)
+                cv2.putText(img, confidence, (x + 5, y + h - 5), font, 1, (255, 255, 0), 1)
 
-# Do a bit of cleanup
-print("\n [INFO] Exiting Program")
-cam.release()
-cv2.destroyAllWindows()
+            cv2.imshow("camera", img)
+
+            if cv2.waitKey(10) & 0xFF == 27:  # Press 'ESC' to exit
+                break
+    finally:
+        # Do a bit of cleanup
+        print("\n [INFO] Exiting Program")
+        cam.release()
+        cv2.destroyAllWindows()
+
+
+if __name__ == "__main__":
+    main()
