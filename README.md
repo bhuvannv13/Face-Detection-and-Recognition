@@ -19,17 +19,16 @@ Built as a learning project while following an OpenCV course.
 - A webcam
 
 ```bash
-pip install opencv-contrib-python numpy pillow
+pip install -r requirements.txt
 ```
 
-`opencv-contrib-python` is required (not plain `opencv-python`) because the LBPH recogniser lives in the `cv2.face` module.
+This installs `opencv-contrib-python` (not plain `opencv-python`) because the LBPH recogniser lives in the `cv2.face` module. It is pinned below version 5, which the scripts were written for.
 
 ## Usage
 
 ```bash
 git clone https://github.com/bhuvannv13/Face-Detection-and-Recognition.git
 cd Face-Detection-and-Recognition
-mkdir dataset trainer
 
 python camtestrunscipt.py   # optional camera check
 python Face_DF.py           # capture faces; repeat with a new id for each person
