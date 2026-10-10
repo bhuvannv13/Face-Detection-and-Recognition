@@ -47,3 +47,7 @@ To show names instead of ids, edit the `names` list in `Face_Recg.py` so that th
 ## Acknowledgements
 
 Uses OpenCV's `haarcascade_frontalface_default.xml`.
+
+## License
+
+MIT. See [LICENSE](LICENSE).
